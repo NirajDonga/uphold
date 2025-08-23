@@ -1,43 +1,45 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-// FIX 1: Changed to a default import to match the export in Background.js
-import Background from "@/components/Background";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import Background from "../components/Background";
+import SessionWrapper from "../components/SessionWrapper";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export const metadata = {
-  title: "Get me a chai",
-  description: "Crowd Funding website for creators",
+  title: "Get Me A Chai",
+  description: "Support creators with a chai and explore their pages.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white min-h-screen flex flex-col`}
-      >
-        <Navbar />
-      
-        <main className="flex-grow relative">
-          <Background />
-
-          <div className="relative z-10 h-full">
-            {children}
+      <body className="min-h-screen bg-black text-white">
+        <SessionWrapper>
+          <div className="relative min-h-screen flex flex-col">
+            <Background />
+            <Navbar />
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="dark"
+            />
           </div>
-        </main>
-        
-        <Footer />
+        </SessionWrapper>
       </body>
     </html>
   );
 }
+
+
