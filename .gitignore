@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.env.local*
 
 # vercel
 .vercel
@@ -39,3 +40,38 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Additional cleanup patterns
+# Temporary files
+*.tmp
+*.temp
+*~
+.cache/
+
+# Editor files
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+Thumbs.db
+.DS_Store?
+ehthumbs.db
+
+# Logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Local uploads (using Cloudinary instead)
+/public/uploads/
+
+# Bundle analyzer
+.next/analyze/
