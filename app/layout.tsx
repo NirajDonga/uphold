@@ -11,8 +11,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import type { ReactNode } from "react";
 
 export const metadata = {
-  title: "Get Me A Chai",
-  description: "Support creators with a chai",
+  title: "Uphold",
+  description: "Support creators directly with Uphold",
 };
 
 interface RootLayoutProps {

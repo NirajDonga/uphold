@@ -143,7 +143,7 @@ const Navbar = () => {
   if (status === 'loading') {
     return (
       <nav className='bg-slate-900 text-white h-24 flex items-center justify-between px-4 sm:px-8 md:px-16'>
-        <div className='text-2xl font-bold'>GetMeAChai!</div>
+  <div className='text-2xl font-bold'>Uphold</div>
         <div className="animate-pulse bg-gray-700 h-10 w-24 rounded"></div>
       </nav>
     );
@@ -160,7 +160,7 @@ const Navbar = () => {
         strategy="afterInteractive"
       />
       <Link href={"/"} className='text-2xl font-bold'>
-        GetMeAChai!
+  Uphold
       </Link>
       <div className="flex items-center gap-4">
         <div className="relative" ref={searchRef}>

@@ -11,7 +11,7 @@ export default function Home(): ReactElement {
             className="font-extrabold text-4xl sm:text-5xl md:text-6xl bg-gradient-to-b from-neutral-50 to-neutral-400 bg-clip-text text-transparent translate-y-3"
             style={{ textShadow: '0px 3px 6px rgba(0, 0, 0, 0.4)' }}
           >
-            Get Me A Chai
+            Uphold
           </span>
           <div className="w-24 h-24 rounded-full flex items-center justify-center translate-y-4">
             <span className="text-4xl">🍵</span>
@@ -47,7 +47,7 @@ export default function Home(): ReactElement {
       <div className="w-full bg-gray-300 h-px"></div>
 
       <div className="text-white container mx-auto py-12 md:py-16">
-        <h1 className="text-2xl md:text-3xl font-bold text-center mb-10 md:mb-12">Your fans can buy you a chai</h1>
+  <h1 className="text-2xl md:text-3xl font-bold text-center mb-10 md:mb-12">Your fans can support you directly</h1>
 
         <div className="flex flex-col md:flex-row gap-8 lg:gap-12 justify-around mt-8">
           <div className="item space-y-4 flex flex-col items-center justify-start p-6 rounded-lg hover:bg-slate-800 transition-colors duration-300 w-full md:w-1/3">
@@ -82,7 +82,7 @@ export default function Home(): ReactElement {
         <h1 className="text-2xl md:text-3xl font-bold text-center mb-8">Learn more about us</h1>
         <div className="max-w-4xl mx-auto text-base md:text-lg text-neutral-300 leading-relaxed">
             <p>
-              'Get Me A Chai' was born from a simple idea: great work deserves support. We believe that creators are the lifeblood of culture and innovation, but often lack the resources to bring their visions to life. Our platform provides a direct bridge between you and your audience, removing the barriers and allowing for a transparent flow of support. Whether you're a writer, artist, developer, or podcaster, 'Get Me A Chai' is your personal crowdfunding space to gather the fuel you need to keep creating, one chai at a time. Join us in fostering a community where creativity thrives and every fan has the power to make a difference.
+              Uphold was born from a simple idea: great work deserves support. We believe that creators are the lifeblood of culture and innovation, but often lack the resources to bring their visions to life. Our platform provides a direct bridge between you and your audience, removing the barriers and allowing for a transparent flow of support. Whether you're a writer, artist, developer, or podcaster, Uphold is your personal crowdfunding space to gather the fuel you need to keep creating. Join us in fostering a community where creativity thrives and every fan has the power to make a difference.
             </p>
         </div>
       </div>

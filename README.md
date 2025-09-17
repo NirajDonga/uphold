@@ -1,4 +1,4 @@
-# Get Me Chai – Stripe Integration & Auth Setup
+# Uphold – Stripe Integration & Auth Setup
 
 ## 1. Environment Variables
 
@@ -43,6 +43,9 @@ npm run dev
 - Use Stripe test card: `4242 4242 4242 4242`, any future expiry, any CVC, any ZIP.
 - On success, your wallet balance updates.
 
+---
+
+Welcome to Uphold! This project is a modern, full-stack Next.js application with Stripe payments and secure authentication. Follow the steps above to get started, and enjoy building with a clean, human-friendly codebase.
 ## 7. Test Withdraw
 - Enter an amount and click Withdraw. This only simulates a payout (no real bank info needed).
 
