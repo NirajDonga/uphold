@@ -9,7 +9,7 @@ declare module "next-auth" {
       username?: string;
       profilePic?: string;
       coverpic?: string;
-      provider?: 'credentials' | 'github' | 'google';
+      provider?: string;
       isProfileComplete?: boolean;
     } & DefaultSession["user"];
   }
@@ -21,7 +21,7 @@ declare module "next-auth" {
     username?: string;
     profilePic?: string;
     coverpic?: string;
-    provider?: 'credentials' | 'github' | 'google';
+    provider?: string;
     isProfileComplete?: boolean;
   }
 }
@@ -34,7 +34,7 @@ declare module "next-auth/jwt" {
     username?: string;
     profilepic?: string;
     coverpic?: string;
-    provider?: 'credentials' | 'github' | 'google';
+    provider?: string;
     isProfileComplete?: boolean;
   }
 }

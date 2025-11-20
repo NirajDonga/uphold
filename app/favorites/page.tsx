@@ -93,7 +93,7 @@ export default function FavoritesPage() {
         
         {favorites.length === 0 ? (
           <div className="bg-gray-800 p-8 rounded-lg text-center">
-            <p className="text-gray-300">You haven't added any creators to your favorites yet.</p>
+            <p className="text-gray-300">You haven&apos;t added any creators to your favorites yet.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

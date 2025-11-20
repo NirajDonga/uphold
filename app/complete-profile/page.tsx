@@ -45,7 +45,7 @@ const CompleteProfile = (): ReactElement => {
 
     if ((session?.user as any).isProfileComplete) {
       router.push('/dashboard');
-      return;
+      return undefined;
     }
     
     const checkProfileStatus = async () => {
@@ -87,6 +87,7 @@ const CompleteProfile = (): ReactElement => {
     };
     
     checkProfileStatus();
+    return undefined;
   }, [session, status, router]);
 
   if (status === 'loading') {

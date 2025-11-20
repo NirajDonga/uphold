@@ -82,7 +82,7 @@ export default function Home(): ReactElement {
         <h1 className="text-2xl md:text-3xl font-bold text-center mb-8">Learn more about us</h1>
         <div className="max-w-4xl mx-auto text-base md:text-lg text-neutral-300 leading-relaxed">
             <p>
-              Uphold was born from a simple idea: great work deserves support. We believe that creators are the lifeblood of culture and innovation, but often lack the resources to bring their visions to life. Our platform provides a direct bridge between you and your audience, removing the barriers and allowing for a transparent flow of support. Whether you're a writer, artist, developer, or podcaster, Uphold is your personal crowdfunding space to gather the fuel you need to keep creating. Join us in fostering a community where creativity thrives and every fan has the power to make a difference.
+              Uphold was born from a simple idea: great work deserves support. We believe that creators are the lifeblood of culture and innovation, but often lack the resources to bring their visions to life. Our platform provides a direct bridge between you and your audience, removing the barriers and allowing for a transparent flow of support. Whether you&apos;re a writer, artist, developer, or podcaster, Uphold is your personal crowdfunding space to gather the fuel you need to keep creating. Join us in fostering a community where creativity thrives and every fan has the power to make a difference.
             </p>
         </div>
       </div>

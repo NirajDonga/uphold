@@ -32,14 +32,18 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-.env.local*
+.env.local
+.env.local.*
+.env.development.local
+.env.test.local
+.env.production.local
 
 # vercel
 .vercel
+.vercel.json
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 # Additional cleanup patterns
 # Temporary files
@@ -75,3 +79,36 @@ coverage/
 
 # Bundle analyzer
 .next/analyze/
+
+# Backup and temporary files
+*.backup
+*.bak
+*.old
+*_backup
+*_old
+
+# Database dumps
+*.sql
+*.sqlite
+*.db
+
+# Private keys and certificates
+*.pem
+*.key
+*.cert
+*.crt
+
+# IDE and editor files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+.idea/*
+*.sublime-project
+*.sublime-workspace
+
+# Documentation builds
+docs/_build/
+
+# Lock files (optional - depends on your workflow)
+# package-lock.json
+# yarn.lock

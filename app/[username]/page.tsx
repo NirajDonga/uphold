@@ -186,7 +186,7 @@ export default async function UsernamePage({ params }: UserPageProps): Promise<R
 
                                             {message && (
                                                 <div className="text-sm text-gray-300 mt-1 break-words">
-                                                    "{message}"
+                                                    &quot;{message}&quot;
                                                 </div>
                                             )}
 

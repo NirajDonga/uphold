@@ -127,12 +127,6 @@ const Navbar = () => {
     };
   }, []);
   
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Don't navigate to search page, just show suggestions
-    // Keep the search input open so user can see and select from suggestions
-  };
-  
   const handleSelectSuggestion = (username: string) => {
     setIsSearchOpen(false);
     setSearchQuery('');
