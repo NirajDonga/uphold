@@ -1,5 +1,6 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 import MakePaymentClient from './MakePaymentClient';
 import { connectToDatabase } from '@/app/db/connectdb';
 import User from '@/app/models/User';
@@ -98,16 +99,22 @@ export default async function UsernamePage({ params }: UserPageProps): Promise<R
     return (
         <>
             <div className='cover w-full relative mb-16 md:mb-20'>
-                <img
+                <Image
                     src={coverUrl}
                     alt={`Cover image for ${username}`}
                     className='object-cover w-full h-[200px] md:h-[350px]'
+                    width={1920}
+                    height={350}
+                    priority
                 />
                 <div className='absolute -bottom-14 md:-bottom-20 left-1/2 -translate-x-1/2'>
-                    <img
+                    <Image
                         src={profileUrl}
                         alt={`Profile picture for ${username}`}
                         className='w-28 h-28 md:w-40 md:h-40 rounded-full border-4 border-white object-cover'
+                        width={160}
+                        height={160}
+                        priority
                     />
                 </div>
             </div>
@@ -171,7 +178,7 @@ export default async function UsernamePage({ params }: UserPageProps): Promise<R
 
                                 return (
                                     <li key={transaction._id?.toString()} className='flex gap-3 items-start border-b border-gray-800 pb-6'>
-                                        <img
+                                        <Image
                                             src={donorProfile}
                                             width={40}
                                             height={40}

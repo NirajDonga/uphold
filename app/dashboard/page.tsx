@@ -1,6 +1,7 @@
 "use client"
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/app/lib/useAuth';
 import type { ReactElement, FormEvent, ChangeEvent } from 'react';
@@ -429,7 +430,7 @@ const Dashboard = (): ReactElement => {
             <label className="block text-gray-400 text-sm font-medium mb-2">Profile Picture</label>
             {preview.profile && (
               <div className="mb-2">
-                <img src={preview.profile} alt="profile preview" className="w-full h-40 object-cover rounded mb-2" />
+                <Image src={preview.profile} alt="profile preview" className="w-full h-40 object-cover rounded mb-2" width={400} height={160} />
               </div>
             )}
             <div className="flex items-center gap-3 mb-2">
@@ -452,7 +453,7 @@ const Dashboard = (): ReactElement => {
             <label className="block text-gray-400 text-sm font-medium mb-2">Cover Picture</label>
             {preview.cover && (
               <div className="mb-2">
-                <img src={preview.cover} alt="cover preview" className="w-full h-40 object-cover rounded mb-2" />
+                <Image src={preview.cover} alt="cover preview" className="w-full h-40 object-cover rounded mb-2" width={800} height={160} />
               </div>
             )}
             <div className="flex items-center gap-3 mb-2">

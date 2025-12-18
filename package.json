@@ -36,6 +36,7 @@
     "@types/js-cookie": "^3.0.6",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.7.0",
+    "critters": "^0.0.23",
     "js-cookie": "^3.0.5",
     "mongoose": "^8.17.2",
     "next": "15.4.3",
@@ -63,7 +64,6 @@
     "eslint": "^9",
     "eslint-config-next": "15.4.3",
     "tailwindcss": "^4",
-    "typescript": "^5.9.2",
-    "web-vitals": "^5.1.0"
+    "typescript": "^5.9.2"
   }
 }

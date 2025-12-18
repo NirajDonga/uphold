@@ -88,7 +88,7 @@ const CompleteProfile = (): ReactElement => {
     
     checkProfileStatus();
     return undefined;
-  }, [session, status, router]);
+  }, [session, status, router, update]);
 
   if (status === 'loading') {
     return (
