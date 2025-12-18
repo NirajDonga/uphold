@@ -39,7 +39,7 @@
     "critters": "^0.0.23",
     "js-cookie": "^3.0.5",
     "mongoose": "^8.17.2",
-    "next": "15.1.0",
+    "next": "15.5.9",
     "next-auth": "^4.24.11",
     "node-fetch": "^2.7.0",
     "nodemailer": "^6.10.1",
