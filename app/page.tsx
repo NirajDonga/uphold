@@ -22,13 +22,13 @@ export default function Home(): ReactElement {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 text-lg mt-8 w-full max-w-xs sm:max-w-none sm:w-auto">
           <Link href="/login">
-            <button type="button" className="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-3">
+            <button type="button" className="text-black bg-white hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-3 transition-colors duration-200">
               Start here
             </button>
           </Link>
           <button 
             type="button" 
-            className="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-3 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700"
+            className="text-white bg-transparent border border-gray-700 hover:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-gray-700 font-medium rounded-lg text-sm px-5 py-3 transition-colors duration-200"
             onClick={(e) => {
               e.preventDefault();
               const element = document.getElementById('learn-more-section');
@@ -50,28 +50,28 @@ export default function Home(): ReactElement {
   <h1 className="text-2xl md:text-3xl font-bold text-center mb-10 md:mb-12">Your fans can support you directly</h1>
 
         <div className="flex flex-col md:flex-row gap-8 lg:gap-12 justify-around mt-8">
-          <div className="item space-y-4 flex flex-col items-center justify-start p-6 rounded-lg hover:bg-slate-800 transition-colors duration-300 w-full md:w-1/3">
-            <div className="bg-slate-700 rounded-full p-3 w-28 h-28 flex items-center justify-center">
+          <div className="item space-y-4 flex flex-col items-center justify-start p-6 rounded-lg border border-gray-800 hover:border-gray-600 hover:bg-gray-900/50 transition-all duration-300 w-full md:w-1/3">
+            <div className="bg-gray-800 rounded-full p-3 w-28 h-28 flex items-center justify-center">
               <span className="text-4xl">💰</span>
             </div>
             <p className="font-bold text-xl">Fund your passion</p>
-            <p className="text-center text-neutral-300">Empower your creative projects by letting your fans become your biggest supporters.</p>
+            <p className="text-center text-neutral-400">Empower your creative projects by letting your fans become your biggest supporters.</p>
           </div>
 
-          <div className="item space-y-4 flex flex-col items-center justify-start p-6 rounded-lg hover:bg-slate-800 transition-colors duration-300 w-full md:w-1/3">
-            <div className="bg-slate-700 rounded-full p-3 w-28 h-28 flex items-center justify-center">
+          <div className="item space-y-4 flex flex-col items-center justify-start p-6 rounded-lg border border-gray-800 hover:border-gray-600 hover:bg-gray-900/50 transition-all duration-300 w-full md:w-1/3">
+            <div className="bg-gray-800 rounded-full p-3 w-28 h-28 flex items-center justify-center">
               <span className="text-4xl">💝</span>
             </div>
             <p className="font-bold text-xl">Accept donations</p>
-            <p className="text-center text-neutral-300">Receive financial support directly from your audience with a simple and secure system.</p>
+            <p className="text-center text-neutral-400">Receive financial support directly from your audience with a simple and secure system.</p>
           </div>
 
-          <div className="item space-y-4 flex flex-col items-center justify-start p-6 rounded-lg hover:bg-slate-800 transition-colors duration-300 w-full md:w-1/3">
-            <div className="bg-slate-700 rounded-full p-3 w-28 h-28 flex items-center justify-center">
+          <div className="item space-y-4 flex flex-col items-center justify-start p-6 rounded-lg border border-gray-800 hover:border-gray-600 hover:bg-gray-900/50 transition-all duration-300 w-full md:w-1/3">
+            <div className="bg-gray-800 rounded-full p-3 w-28 h-28 flex items-center justify-center">
               <span className="text-4xl">👥</span>
             </div>
             <p className="font-bold text-xl">Engage your community</p>
-            <p className="text-center text-neutral-300">Build a stronger connection with your followers by letting them be part of your journey.</p>
+            <p className="text-center text-neutral-400">Build a stronger connection with your followers by letting them be part of your journey.</p>
           </div>
         </div>
       </div>

@@ -300,7 +300,7 @@ const Login = (): ReactElement => {
             {isLogin ? "Don't have an account? " : 'Already have an account? '}
             <button
               onClick={() => setIsLogin(!isLogin)}
-              className="font-medium text-blue-400 hover:text-blue-300"
+              className="font-medium text-white hover:text-gray-300 underline transition-colors"
             >
               {isLogin ? 'Sign up' : 'Sign in'}
             </button>
@@ -347,7 +347,7 @@ const Login = (): ReactElement => {
                 required
                 value={formData.email}
                 onChange={handleInputChange}
-                className="relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-400 text-white rounded-md bg-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-400 text-white rounded-md bg-gray-800 focus:outline-none focus:ring-gray-500 focus:border-gray-500 transition-colors"
                 placeholder="Email address"
               />
             </div>
@@ -362,7 +362,7 @@ const Login = (): ReactElement => {
                 required
                 value={formData.password}
                 onChange={handleInputChange}
-                className="relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-400 text-white rounded-md bg-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-400 text-white rounded-md bg-gray-800 focus:outline-none focus:ring-gray-500 focus:border-gray-500 transition-colors"
                 placeholder="Password"
               />
               {isLogin && (
@@ -370,7 +370,7 @@ const Login = (): ReactElement => {
                   <button
                     type="button"
                     onClick={handleForgotPassword}
-                    className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                    className="text-sm text-gray-400 hover:text-white transition-colors"
                   >
                     Forgot your password?
                   </button>
@@ -390,7 +390,7 @@ const Login = (): ReactElement => {
                     required
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className="relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-400 text-white rounded-md bg-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-400 text-white rounded-md bg-gray-800 focus:outline-none focus:ring-gray-500 focus:border-gray-500 transition-colors"
                     placeholder="Confirm Password"
                   />
                 </div>
@@ -406,7 +406,7 @@ const Login = (): ReactElement => {
                       value={formData.username}
                       onChange={handleInputChange}
                       onBlur={checkUsernameAvailability}
-                      className="relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-400 text-white rounded-md bg-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-400 text-white rounded-md bg-gray-800 focus:outline-none focus:ring-gray-500 focus:border-gray-500 transition-colors"
                       placeholder="Username"
                     />
                     {isCheckingUsername && (
@@ -435,7 +435,7 @@ const Login = (): ReactElement => {
                     type="text"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-400 text-white rounded-md bg-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-400 text-white rounded-md bg-gray-800 focus:outline-none focus:ring-gray-500 focus:border-gray-500 transition-colors"
                     placeholder="Full Name (optional)"
                   />
                 </div>
@@ -446,7 +446,7 @@ const Login = (): ReactElement => {
               <button
                 type="submit"
                 disabled={isRegistering || (!isLogin && (isCheckingUsername || usernameAvailable === false))}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-black bg-white hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
                 {isRegistering ? 'Creating Account...' : (isLogin ? 'Sign in' : 'Create Account')}
                 {!isLogin && usernameAvailable === false && (

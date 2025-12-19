@@ -117,7 +117,7 @@ export default function FavoritesPage() {
                   </div>
                   <div>
                     <h2 className="text-xl font-medium text-white">{creator.name || creator.username}</h2>
-                    <p className="text-blue-400">@{creator.username}</p>
+                    <p className="text-gray-400">@{creator.username}</p>
                     {creator.bio && (
                       <p className="text-gray-300 text-sm mt-1 line-clamp-2">{creator.bio}</p>
                     )}

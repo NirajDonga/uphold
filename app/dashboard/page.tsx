@@ -339,7 +339,7 @@ const Dashboard = (): ReactElement => {
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-white transition-colors"
             />
           </div>
 
@@ -357,12 +357,12 @@ const Dashboard = (): ReactElement => {
                     : usernameAvailable === false 
                     ? 'border-red-500' 
                     : 'border-gray-600'
-                } text-white py-2 focus:outline-none focus:border-blue-500 transition-colors`}
+                } text-white py-2 focus:outline-none focus:border-white transition-colors`}
                 placeholder="Choose a username"
               />
               {isCheckingUsername && (
                 <div className="absolute right-2 top-2">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                 </div>
               )}
               {!isCheckingUsername && formData.username && usernameAvailable === true && (
@@ -390,7 +390,7 @@ const Dashboard = (): ReactElement => {
               placeholder="Current Password"
               value={formData.currentPassword || ''}
               onChange={handleInputChange}
-              className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-blue-500 transition-colors mb-2"
+              className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-white transition-colors mb-2"
             />
             <input
               type="password"
@@ -398,12 +398,12 @@ const Dashboard = (): ReactElement => {
               placeholder="New Password"
               value={formData.newPassword || ''}
               onChange={handleInputChange}
-              className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-blue-500 transition-colors mb-2"
+              className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-white transition-colors mb-2"
             />
             <button
               type="button"
               onClick={handleChangePassword}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              className="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
               disabled={loading}
             >
               Change Password
@@ -419,7 +419,7 @@ const Dashboard = (): ReactElement => {
               rows={3}
               maxLength={500}
               placeholder="Tell us about yourself..."
-              className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+              className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-white transition-colors resize-none"
             />
             <div className="text-right text-xs text-gray-500 mt-1">
               {formData.bio.length}/500
@@ -434,7 +434,7 @@ const Dashboard = (): ReactElement => {
               </div>
             )}
             <div className="flex items-center gap-3 mb-2">
-              <label htmlFor="profile-input" className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md cursor-pointer transition-colors">
+              <label htmlFor="profile-input" className="inline-block bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-semibold py-2 px-4 rounded-md cursor-pointer transition-colors">
                 Choose file
               </label>
               <span className="text-sm text-gray-300 truncate max-w-[60%]">{selectedNames.profile || 'No file chosen'}</span>
@@ -457,7 +457,7 @@ const Dashboard = (): ReactElement => {
               </div>
             )}
             <div className="flex items-center gap-3 mb-2">
-              <label htmlFor="cover-input" className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md cursor-pointer transition-colors">
+              <label htmlFor="cover-input" className="inline-block bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-semibold py-2 px-4 rounded-md cursor-pointer transition-colors">
                 Choose file
               </label>
               <span className="text-sm text-gray-300 truncate max-w-[60%]">{selectedNames.cover || 'No file chosen'}</span>
@@ -472,7 +472,7 @@ const Dashboard = (): ReactElement => {
             />
           </div>
 
-          <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-300 ease-in-out transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+          <button type="submit" disabled={loading} className="w-full bg-white text-black hover:bg-gray-200 font-bold py-3 px-4 rounded-md transition duration-300 ease-in-out transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
             {loading ? 'Saving...' : 'Save'}
           </button>
         </form>

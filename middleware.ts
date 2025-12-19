@@ -48,6 +48,12 @@ export default withAuth(
     callbacks: {
       authorized: ({ token, req }) => {
         const path = req.nextUrl.pathname;
+
+        // Explicitly allow the landing page
+        if (path === '/') {
+          return true;
+        }
+
         // Require authentication for protected routes
         if (path.startsWith('/dashboard') || 
             path.startsWith('/funds') ||

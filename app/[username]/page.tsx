@@ -53,33 +53,36 @@ export default async function UsernamePage({ params }: UserPageProps): Promise<R
 
     try {
         const userId = user._id;
-
-        recentTransactions = await Transaction.find({
-            toUserId: userId,
-            type: "transfer",
-            status: "success"
-        })
-        .sort({ createdAt: -1 })
-        .limit(20)
-        .populate('fromUserId', 'name username profilepic')
-        .lean() as IPopulatedTransaction[];
-
-        const uniqueDonors = await Transaction.distinct('fromUserId', {
-            toUserId: userId,
-            type: "transfer",
-            status: "success"
-        });
-        totalDonors = uniqueDonors.length;
-
         const oneMonthAgo = new Date();
         oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
-        const lastMonthTransactions = await Transaction.find({
-            toUserId: userId,
-            type: "transfer",
-            status: "success",
-            createdAt: { $gte: oneMonthAgo }
-        });
+        const [recentTransactionsData, uniqueDonors, lastMonthTransactions] = await Promise.all([
+            Transaction.find({
+                toUserId: userId,
+                type: "transfer",
+                status: "success"
+            })
+            .sort({ createdAt: -1 })
+            .limit(20)
+            .populate('fromUserId', 'name username profilepic')
+            .lean(),
+
+            Transaction.distinct('fromUserId', {
+                toUserId: userId,
+                type: "transfer",
+                status: "success"
+            }),
+
+            Transaction.find({
+                toUserId: userId,
+                type: "transfer",
+                status: "success",
+                createdAt: { $gte: oneMonthAgo }
+            }).select('amountPaise').lean()
+        ]);
+
+        recentTransactions = recentTransactionsData as IPopulatedTransaction[];
+        totalDonors = uniqueDonors.length;
 
         lastMonthAmount = lastMonthTransactions.reduce((sum, transaction) => {
             return sum + (transaction.amountPaise || 0);
@@ -145,7 +148,7 @@ export default async function UsernamePage({ params }: UserPageProps): Promise<R
                 <div className='supporters w-1/2 bg-slate-900 rounded-lg p-6'>
                     <div className="flex justify-between items-center mb-6">
                         <h2 className='font-bold text-xl'>Recent Supporters</h2>
-                        <div className="text-sm text-blue-400">{totalDonors} total</div>
+                        <div className="text-sm text-gray-400">{totalDonors} total</div>
                     </div>
 
                     {recentTransactions.length > 0 ? (

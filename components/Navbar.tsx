@@ -40,9 +40,10 @@ const Navbar = () => {
   }, []);
 
   const getButtonClassName = (path: string) => {
-    const baseClasses = "block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white cursor-pointer";
-    const activeClasses = "text-blue-600 dark:text-blue-400 font-semibold";
-    return `${baseClasses} ${pathname === path ? activeClasses : ''}`;
+    const baseClasses = "block w-full text-left px-4 py-2.5 hover:bg-gray-800/50 transition-colors cursor-pointer rounded-lg mx-1 w-[calc(100%-8px)]";
+    const activeClasses = "text-white font-semibold bg-gray-800";
+    const inactiveClasses = "text-gray-400 hover:text-gray-200";
+    return `${baseClasses} ${pathname === path ? activeClasses : inactiveClasses}`;
   };
 
   const handleNavigation = (path: string) => {
@@ -136,9 +137,9 @@ const Navbar = () => {
 
   if (status === 'loading') {
     return (
-      <nav className='bg-slate-900 text-white h-24 flex items-center justify-between px-4 sm:px-8 md:px-16'>
-  <div className='text-2xl font-bold'>Uphold</div>
-        <div className="animate-pulse bg-gray-700 h-10 w-24 rounded"></div>
+      <nav className='bg-black/50 backdrop-blur-md border-b border-gray-800 text-white h-20 flex items-center justify-between px-4 sm:px-8 md:px-16 sticky top-0 z-50'>
+        <div className='text-2xl font-bold tracking-tight'>Uphold</div>
+        <div className="animate-pulse bg-gray-800 h-10 w-24 rounded-full"></div>
       </nav>
     );
   }
@@ -148,19 +149,19 @@ const Navbar = () => {
   const profileUrl = session?.user?.profilePic || '';
 
   return (
-    <nav className='bg-slate-900 text-white h-24 flex items-center justify-between px-4 sm:px-8 md:px-16'>
+    <nav className='bg-black/50 backdrop-blur-md border-b border-gray-800 text-white h-20 flex items-center justify-between px-4 sm:px-8 md:px-16 sticky top-0 z-50 transition-all duration-300'>
       <Script
         src="https://cdn.lordicon.com/lordicon.js"
         strategy="afterInteractive"
       />
-      <Link href={"/"} className='text-2xl font-bold'>
-  Uphold
+      <Link href={"/"} className='group flex items-center gap-2'>
+        <span className='text-2xl font-bold tracking-tight group-hover:text-gray-200 transition-colors'>Uphold</span>
       </Link>
       <div className="flex items-center gap-4">
         <div className="relative" ref={searchRef}>
           <button 
             onClick={() => setIsSearchOpen(!isSearchOpen)}
-            className="p-2 text-white hover:bg-gray-700 rounded-full"
+            className={`p-2.5 rounded-full transition-all duration-200 ${isSearchOpen ? 'bg-white text-black' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}
             aria-label="Search users"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -169,108 +170,118 @@ const Navbar = () => {
           </button>
           
           {isSearchOpen && (
-            <div className="absolute right-0 mt-2 w-72 bg-gray-800 rounded-lg shadow-lg p-4 z-50">
-              <div className="flex items-center">
+            <div className="absolute right-0 mt-3 w-80 bg-black/90 backdrop-blur-xl border border-gray-800 rounded-xl shadow-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center relative">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 absolute left-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
                 <input
                   type="text"
                   placeholder="Search creators..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none"
+                  className="w-full bg-gray-900 text-white rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-white/20 border border-gray-800 placeholder-gray-500 transition-all"
                   autoFocus
-                  onClick={(e) => e.stopPropagation()} // Prevent closing when clicking in input
+                  onClick={(e) => e.stopPropagation()} 
                 />
               </div>
               
               {/* User Suggestions */}
-              <div className="mt-3 border-t border-gray-700 pt-2">
-                <h3 className="text-xs text-gray-400 mb-2">
-                  {searchQuery.trim() ? 'Matching users:' : 'Start typing to search users'}
-                </h3>
-                
+              <div className="mt-3 pt-2">
                 {searchQuery.trim() && (
                   <div>
                     {isLoading ? (
-                      <div className="py-2 text-center text-sm text-gray-400">
-                        <div className="animate-pulse">Loading suggestions...</div>
+                      <div className="py-4 text-center text-sm text-gray-500">
+                        <div className="animate-pulse flex justify-center items-center gap-2">
+                          <div className="h-1.5 w-1.5 bg-gray-500 rounded-full animate-bounce"></div>
+                          <div className="h-1.5 w-1.5 bg-gray-500 rounded-full animate-bounce delay-75"></div>
+                          <div className="h-1.5 w-1.5 bg-gray-500 rounded-full animate-bounce delay-150"></div>
+                        </div>
                       </div>
                     ) : suggestions.length > 0 ? (
-                      <ul className="max-h-64 overflow-y-auto">
+                      <ul className="max-h-64 overflow-y-auto pr-1 custom-scrollbar">
                         {suggestions.map((user) => (
-                          <li key={user.id} className="border-b border-gray-700 last:border-0">
+                          <li key={user.id} className="mb-1 last:mb-0">
                             <button
                               onClick={() => handleSelectSuggestion(user.username)}
-                              className="w-full flex items-center p-3 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                              className="w-full flex items-center p-2 hover:bg-gray-800/50 rounded-lg transition-colors duration-200 group"
                             >
-                              <div className="flex-shrink-0 w-10 h-10 mr-3">
+                              <div className="flex-shrink-0 w-9 h-9 mr-3">
                                 {user.profilepic ? (
                                   <Image
                                     src={user.profilepic}
                                     alt={user.name}
-                                    width={40}
-                                    height={40}
-                                    className="rounded-full object-cover w-10 h-10 border border-gray-600"
+                                    width={36}
+                                    height={36}
+                                    className="rounded-full object-cover w-9 h-9 border border-gray-800 group-hover:border-gray-600 transition-colors"
                                   />
                                 ) : (
-                                  <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-full w-10 h-10 flex items-center justify-center text-sm">
+                                  <div className="bg-gray-800 rounded-full w-9 h-9 flex items-center justify-center text-xs font-medium text-gray-300 border border-gray-700">
                                     {user.name.charAt(0).toUpperCase()}
                                   </div>
                                 )}
                               </div>
-                              <div className="text-left">
-                                <p className="text-white text-sm font-medium">{user.name}</p>
-                                <p className="text-blue-400 text-xs">@{user.username}</p>
+                              <div className="text-left overflow-hidden">
+                                <p className="text-gray-200 text-sm font-medium truncate group-hover:text-white transition-colors">{user.name}</p>
+                                <p className="text-gray-500 text-xs truncate">@{user.username}</p>
                               </div>
                             </button>
                           </li>
                         ))}
                       </ul>
                     ) : (
-                      <div className="py-3 text-center text-sm text-gray-400">
-                        No matching users found
+                      <div className="py-4 text-center text-sm text-gray-500">
+                        No creators found
                       </div>
                     )}
                   </div>
+                )}
+                {!searchQuery.trim() && (
+                   <div className="py-2 text-center text-xs text-gray-600">
+                     Type to search for creators
+                   </div>
                 )}
               </div>
             </div>
           )}
         </div>
-        {status === 'unauthenticated' && !session && (
-          <span className="text-red-400 font-semibold mr-2">Signed out</span>
-        )}
+
         {session ? (
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               type="button"
-              className="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center cursor-pointer"
+              className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border transition-all duration-200 ${isDropdownOpen ? 'bg-gray-800 border-gray-600' : 'bg-transparent border-transparent hover:bg-gray-900 hover:border-gray-800'}`}
             >
               {profileUrl ? (
                 <Image
                   src={profileUrl}
                   alt="Profile"
-                  width={24}
-                  height={24}
-                  className="w-6 h-6 rounded-full mr-2 object-cover"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 rounded-full object-cover border border-gray-700"
                 />
               ) : (
-                <div className="w-6 h-6 rounded-full mr-2 bg-gray-400 flex items-center justify-center text-xs">
+                <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-xs font-medium border border-gray-700">
                   {username?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
               )}
-              Welcome, {username || 'User'}
-              <svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+              <span className="text-sm font-medium text-gray-300 hidden sm:block">{username || 'User'}</span>
+              <svg className={`w-2.5 h-2.5 text-gray-500 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4" />
               </svg>
             </button>
 
             {isDropdownOpen && (
-              <div className="z-50 absolute right-0 mt-2 bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700">
-                <ul className="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
+              <div className="z-50 absolute right-0 mt-3 w-56 bg-black/90 backdrop-blur-xl border border-gray-800 rounded-xl shadow-2xl py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="px-4 py-3 border-b border-gray-800 mb-1">
+                  <p className="text-sm text-white font-medium truncate">{username}</p>
+                  <p className="text-xs text-gray-500 truncate">{session.user?.email}</p>
+                </div>
+                <ul className="text-sm text-gray-300">
                   <li>
                     <button onClick={() => handleNavigation(`/${username}`)} className={getButtonClassName(`/${username}`)}>
-                      Your page
+                      Your Page
                     </button>
                   </li>
                   <li>
@@ -285,13 +296,13 @@ const Navbar = () => {
                   </li>
                   <li>
                     <button onClick={() => handleNavigation('/favorites')} className={getButtonClassName('/favorites')}>
-                      My Favorites
+                      Favorites
                     </button>
                   </li>
-                  <li>
+                  <li className="mt-1 border-t border-gray-800 pt-1">
                     <button
                       onClick={handleSignOut}
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white cursor-pointer"
+                      className="block w-full text-left px-4 py-2.5 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors cursor-pointer"
                     >
                       Sign out
                     </button>
@@ -304,7 +315,7 @@ const Navbar = () => {
           <Link href={"/login"}>
             <button
               type="button"
-              className="text-white bg-gradient-to-br from-purple-600 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center cursor-pointer"
+              className="text-black bg-white hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-500 font-bold rounded-full text-sm px-6 py-2.5 text-center cursor-pointer transition-all duration-200 shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
             >
               Login
             </button>

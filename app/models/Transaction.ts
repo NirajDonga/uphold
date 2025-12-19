@@ -28,4 +28,8 @@ const TransactionSchema = new Schema<ITransaction>(
   { timestamps: true }
 );
 
+// Indexes for performance optimization
+TransactionSchema.index({ toUserId: 1, type: 1, status: 1, createdAt: -1 });
+TransactionSchema.index({ fromUserId: 1, type: 1, status: 1 });
+
 export default (mongoose.models.Transaction as mongoose.Model<ITransaction>) || mongoose.model<ITransaction>("Transaction", TransactionSchema);

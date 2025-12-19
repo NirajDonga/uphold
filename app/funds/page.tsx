@@ -272,7 +272,7 @@ const FundsPage: React.FC = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between bg-gray-800 p-4 rounded-lg">
             <p className="text-gray-300">Balance: {balance !== null ? Math.floor(balance) : ' '}</p>
-            <button type="button" onClick={refreshBalance} className="text-sm text-blue-400 hover:text-blue-300 transition-colors">Refresh</button>
+            <button type="button" onClick={refreshBalance} className="text-sm text-white hover:text-gray-300 underline transition-colors">Refresh</button>
           </div>
           
           {/* Confirmation Dialog */}
@@ -292,7 +292,7 @@ const FundsPage: React.FC = () => {
                   </button>
                   <button 
                     onClick={confirmationAction === 'topup' ? doTopup : doWithdraw}
-                    className={`flex-1 text-white py-2 px-4 rounded-md transition-colors ${confirmationAction === 'topup' ? 'bg-green-600 hover:bg-green-700' : 'bg-purple-600 hover:bg-purple-700'}`}
+                    className={`flex-1 text-white py-2 px-4 rounded-md transition-colors ${confirmationAction === 'topup' ? 'bg-white text-black hover:bg-gray-200' : 'bg-gray-800 hover:bg-gray-700 border border-gray-700'}`}
                     disabled={loading}
                   >
                     {loading ? 'Processing...' : 'Confirm'}
@@ -308,7 +308,7 @@ const FundsPage: React.FC = () => {
               <button
                 onClick={() => setActiveTab('topup')}
                 className={`px-4 py-2 ${activeTab === 'topup' 
-                  ? 'border-b-2 border-blue-500 text-blue-400' 
+                  ? 'border-b-2 border-white text-white' 
                   : 'text-gray-400 hover:text-gray-200'}`}
               >
                 Add Funds
@@ -316,7 +316,7 @@ const FundsPage: React.FC = () => {
               <button
                 onClick={() => setActiveTab('withdraw')}
                 className={`px-4 py-2 ${activeTab === 'withdraw' 
-                  ? 'border-b-2 border-blue-500 text-blue-400' 
+                  ? 'border-b-2 border-white text-white' 
                   : 'text-gray-400 hover:text-gray-200'}`}
               >
                 Withdraw
@@ -324,7 +324,7 @@ const FundsPage: React.FC = () => {
               <button
                 onClick={() => setActiveTab('earnings')}
                 className={`px-4 py-2 ${activeTab === 'earnings' 
-                  ? 'border-b-2 border-blue-500 text-blue-400' 
+                  ? 'border-b-2 border-white text-white' 
                   : 'text-gray-400 hover:text-gray-200'}`}
               >
                 Earnings
@@ -343,13 +343,13 @@ const FundsPage: React.FC = () => {
                   placeholder="Amount (₹, min 50)"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-white transition-colors"
                   required
                 />
                 <button 
                   type="submit" 
                   disabled={loading} 
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded-md transition-colors"
+                  className="w-full bg-white text-black hover:bg-gray-200 font-semibold py-2 px-3 rounded-md transition-colors"
                 >
                   {loading ? 'Processing...' : 'Top-up (Stripe Checkout)'}
                 </button>
@@ -366,14 +366,14 @@ const FundsPage: React.FC = () => {
                   placeholder="Amount to withdraw (₹)"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-white transition-colors"
                   required
                 />
                 <button 
                   type="button" 
                   disabled={loading} 
                   onClick={confirmWithdraw} 
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-md transition-colors"
+                  className="w-full bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-semibold py-2 px-6 rounded-md transition-colors"
                 >
                   {loading ? 'Processing...' : 'Withdraw Funds'}
                 </button>
