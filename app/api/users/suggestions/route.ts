@@ -34,10 +34,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         profilepic: user.profilepic?.url || null
       }))
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching user suggestions:', error);
     return NextResponse.json({ 
-      error: "Error fetching user suggestions" 
+      error: error.message || "Error fetching user suggestions" 
     }, { status: 500 });
   }
 }

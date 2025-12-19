@@ -22,8 +22,8 @@ declare module "next-auth/jwt" {
 }
 
 // Ensure required environment variables are present
-if (!process.env.NEXTAUTH_SECRET) {
-  throw new Error('NEXTAUTH_SECRET environment variable is required');
+if (!process.env.NEXTAUTH_SECRET && process.env.NODE_ENV === 'production') {
+  console.warn('NEXTAUTH_SECRET environment variable is not set. This is required for production.');
 }
 
 export const authOptions: NextAuthOptions = {
@@ -72,6 +72,7 @@ export const authOptions: NextAuthOptions = {
             provider: user.provider
           } as NextAuthUser;
         } catch (error) {
+          console.error("Authorize error:", error);
           return null;
         }
       }

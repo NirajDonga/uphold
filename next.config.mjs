@@ -38,7 +38,7 @@ const nextConfig = {
   },
   // Performance optimizations
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Disabled to prevent deployment issues with critters
     optimizePackageImports: ['react-icons', 'react-toastify'],
   },
   eslint: {

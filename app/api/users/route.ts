@@ -93,10 +93,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json(response, { status: 201 });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Registration error:', error);
     return NextResponse.json({ 
-      error: "Internal server error during registration" 
+      error: error.message || "Internal server error during registration" 
     }, { status: 500 });
   }
 }
