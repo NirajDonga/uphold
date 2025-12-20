@@ -208,6 +208,8 @@ export const authOptions: NextAuthOptions = {
             token.profilepic = dbUser.profilepic?.url || undefined;
             token.coverpic = dbUser.coverpic?.url || undefined;
             token.isProfileComplete = dbUser.isProfileComplete;
+            // Update lastReAuthTime when explicitly updating (after re-auth)
+            token.lastReAuthTime = Date.now();
             if (isDebugMode) console.log(`JWT: Token updated for user ${dbUser.email}`);
           } else {
             console.error(`JWT: User ${token.id} not found during update`);

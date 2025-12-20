@@ -356,15 +356,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       // Handle password change/set
       if (changePassword && newPassword) {
         const bcrypt = await import('bcryptjs');
-        const { getToken } = await import('next-auth/jwt');
+        const { getServerSession } = await import('next-auth');
+        const { authOptions } = await import('@/app/api/auth/[...nextauth]/route');
         
-        // Get current session token to check how user logged in
-        const token = await getToken({ 
-          req: request,
-          secret: process.env.NEXTAUTH_SECRET 
-        });
+        // Get current session to check how user logged in
+        const session = await getServerSession(authOptions);
         
-        if (!token) {
+        if (!session || !session.user) {
           const response: ApiResponse = { 
             success: false, 
             error: "You must be signed in to change your password. Please refresh the page and try again." 
@@ -373,19 +371,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
         
         // Check current session provider (how they logged in THIS time)
-        const currentSessionProvider = token.provider || 'credentials';
+        const currentSessionProvider = (session.user as any).provider || 'credentials';
         const hasExistingPassword = !!currentUser.password;
         
         // If user logged in via OAuth (regardless of whether they have a password)
         // require re-authentication instead of current password
         if (currentSessionProvider !== 'credentials') {
-          // OAuth session - require recent re-authentication for security
-          const lastReAuthTime = token.lastReAuthTime || 0;
+          // OAuth session - require recent re-authentication for security (30 minutes)
+          const lastReAuthTime = (session.user as any).lastReAuthTime || (session.user as any).lastAuthTime || 0;
           const currentTime = Date.now();
           const timeSinceReAuth = currentTime - lastReAuthTime;
-          const FIVE_MINUTES = 5 * 60 * 1000;
+          const THIRTY_MINUTES = 30 * 60 * 1000;
           
-          if (timeSinceReAuth > FIVE_MINUTES) {
+          if (timeSinceReAuth > THIRTY_MINUTES) {
             const response: ApiResponse = { 
               success: false, 
               error: "Re-authentication required",
@@ -531,14 +529,12 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
 
     // Handle password change for authenticated users
     if (body.changePassword && body.newPassword) {
-      const { getToken } = await import('next-auth/jwt');
+      const { getServerSession } = await import('next-auth');
+      const { authOptions } = await import('@/app/api/auth/[...nextauth]/route');
       
-      const token = await getToken({ 
-        req: request,
-        secret: process.env.NEXTAUTH_SECRET 
-      });
+      const session = await getServerSession(authOptions);
       
-      if (!token) {
+      if (!session || !session.user) {
         const response: ApiResponse = { 
           success: false, 
           error: "You must be signed in to change your password. Please refresh the page and try again." 
@@ -547,17 +543,17 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       }
       
       // Check current session provider
-      const currentSessionProvider = token.provider || 'credentials';
+      const currentSessionProvider = (session.user as any).provider || 'credentials';
       const hasExistingPassword = !!currentUser.password;
       
-      // If user logged in via OAuth, require re-authentication
+      // If user logged in via OAuth, require re-authentication within 30 minutes
       if (currentSessionProvider !== 'credentials') {
-        const lastReAuthTime = token.lastReAuthTime || 0;
+        const lastReAuthTime = (session.user as any).lastReAuthTime || (session.user as any).lastAuthTime || 0;
         const currentTime = Date.now();
         const timeSinceReAuth = currentTime - lastReAuthTime;
-        const FIVE_MINUTES = 5 * 60 * 1000;
+        const THIRTY_MINUTES = 30 * 60 * 1000;
         
-        if (timeSinceReAuth > FIVE_MINUTES) {
+        if (timeSinceReAuth > THIRTY_MINUTES) {
           const response: ApiResponse = { 
             success: false, 
             error: "Re-authentication required",
@@ -570,6 +566,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
           };
           return NextResponse.json(response, { status: 403 });
         }
+        console.log(`OAuth user ${currentUser.email} setting password - re-auth ${Math.floor(timeSinceReAuth / 1000)}s ago`);
       } else {
         // Credentials session - require current password if user has one
         if (hasExistingPassword && body.currentPassword) {
