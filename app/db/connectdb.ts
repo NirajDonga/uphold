@@ -32,9 +32,9 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
       bufferCommands: false,
       maxPoolSize: 20, // Increased pool size for better concurrent performance
       minPoolSize: 5, // Keep minimum connections for faster initial queries
-      serverSelectionTimeoutMS: 10000, // Increased timeout for slower connections
-      socketTimeoutMS: 60000, // Increased socket timeout
-      connectTimeoutMS: 10000, // Connection timeout
+      serverSelectionTimeoutMS: 5000, // Reduced for faster failure detection
+      socketTimeoutMS: 45000, // Socket timeout
+      connectTimeoutMS: 5000, // Reduced connection timeout for faster failure
       family: 4, // Use IPv4, skip trying IPv6
       heartbeatFrequencyMS: 30000, // Check server status every 30 seconds
     };
@@ -54,6 +54,7 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
     return cached.conn;
   } catch (error) {
     cached.promise = null; // Reset promise on error
+    console.error('Failed to connect to database:', error);
     throw error;
   }
 }
