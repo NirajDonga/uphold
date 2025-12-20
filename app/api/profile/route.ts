@@ -90,7 +90,49 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (contentType.includes("application/json")) {
       body = await request.json();
     }
-
+    // Handle token-based password reset (from email link)
+    if (body && body.token && body.newPassword) {
+      const bcrypt = await import('bcryptjs');
+      
+      const userWithToken = await User.findOne({
+        resetPasswordToken: body.token,
+        resetPasswordExpires: { $gt: Date.now() }
+      });
+      
+      if (!userWithToken) {
+        const response: ApiResponse = { 
+          success: false, 
+          error: "Invalid or expired reset token" 
+        };
+        return NextResponse.json(response, { status: 400 });
+      }
+      
+      // Validate new password
+      if (body.newPassword.length < 6) {
+        const response: ApiResponse = { 
+          success: false, 
+          error: "Password must be at least 6 characters long" 
+        };
+        return NextResponse.json(response, { status: 400 });
+      }
+      
+      // Hash and update password
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(body.newPassword, saltRounds);
+      
+      await User.findByIdAndUpdate(userWithToken._id, {
+        password: hashedPassword,
+        resetPasswordToken: undefined,
+        resetPasswordExpires: undefined
+      });
+      
+      console.log(`Password reset via token for user ${userWithToken.email}`);
+      const response: ApiResponse = { 
+        success: true, 
+        message: "Password has been reset successfully" 
+      };
+      return NextResponse.json(response);
+    }
     // Handle unauthenticated password reset requests
     if (body && body.action === "requestPasswordReset" && body.email) {
       // Find user by email for unauthenticated password reset
@@ -325,7 +367,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         if (!token) {
           const response: ApiResponse = { 
             success: false, 
-            error: "Authentication token not found" 
+            error: "You must be signed in to change your password. Please refresh the page and try again." 
           };
           return NextResponse.json(response, { status: 401 });
         }
@@ -423,6 +465,155 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   } catch (error: any) {
     console.error('Profile POST error:', error);
+    const response: ApiResponse = { 
+      success: false, 
+      error: `Internal server error: ${error.message}` 
+    };
+    return NextResponse.json(response, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest): Promise<NextResponse> {
+  try {
+    await connectToDatabase();
+    const body = await request.json();
+
+    // Handle token-based password reset (from email link) - no auth required
+    if (body.token && body.newPassword) {
+      const userWithToken = await User.findOne({
+        resetPasswordToken: body.token,
+        resetPasswordExpires: { $gt: Date.now() }
+      });
+      
+      if (!userWithToken) {
+        const response: ApiResponse = { 
+          success: false, 
+          error: "Invalid or expired reset token" 
+        };
+        return NextResponse.json(response, { status: 400 });
+      }
+      
+      // Validate new password
+      if (body.newPassword.length < 6) {
+        const response: ApiResponse = { 
+          success: false, 
+          error: "Password must be at least 6 characters long" 
+        };
+        return NextResponse.json(response, { status: 400 });
+      }
+      
+      // Hash and update password
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(body.newPassword, saltRounds);
+      
+      await User.findByIdAndUpdate(userWithToken._id, {
+        password: hashedPassword,
+        resetPasswordToken: undefined,
+        resetPasswordExpires: undefined
+      });
+      
+      console.log(`Password reset via token for user ${userWithToken.email}`);
+      const response: ApiResponse = { 
+        success: true, 
+        message: "Password has been reset successfully" 
+      };
+      return NextResponse.json(response);
+    }
+
+    // For all other PATCH requests, require authentication
+    const user = await requireAuth();
+    const currentUser = await User.findById(user.id);
+    
+    if (!currentUser) {
+      const response: ApiResponse = { success: false, error: "User not found" };
+      return NextResponse.json(response, { status: 404 });
+    }
+
+    // Handle password change for authenticated users
+    if (body.changePassword && body.newPassword) {
+      const { getToken } = await import('next-auth/jwt');
+      
+      const token = await getToken({ 
+        req: request,
+        secret: process.env.NEXTAUTH_SECRET 
+      });
+      
+      if (!token) {
+        const response: ApiResponse = { 
+          success: false, 
+          error: "You must be signed in to change your password. Please refresh the page and try again." 
+        };
+        return NextResponse.json(response, { status: 401 });
+      }
+      
+      // Check current session provider
+      const currentSessionProvider = token.provider || 'credentials';
+      const hasExistingPassword = !!currentUser.password;
+      
+      // If user logged in via OAuth, require re-authentication
+      if (currentSessionProvider !== 'credentials') {
+        const lastReAuthTime = token.lastReAuthTime || 0;
+        const currentTime = Date.now();
+        const timeSinceReAuth = currentTime - lastReAuthTime;
+        const FIVE_MINUTES = 5 * 60 * 1000;
+        
+        if (timeSinceReAuth > FIVE_MINUTES) {
+          const response: ApiResponse = { 
+            success: false, 
+            error: "Re-authentication required",
+            data: {
+              requiresReAuth: true,
+              reason: hasExistingPassword 
+                ? "Changing your password requires recent authentication for security"
+                : "Setting a password requires recent authentication for security"
+            }
+          };
+          return NextResponse.json(response, { status: 403 });
+        }
+      } else {
+        // Credentials session - require current password if user has one
+        if (hasExistingPassword && body.currentPassword) {
+          const isCurrentPasswordValid = await bcrypt.compare(body.currentPassword, currentUser.password);
+          if (!isCurrentPasswordValid) {
+            const response: ApiResponse = { 
+              success: false, 
+              error: "Current password is incorrect" 
+            };
+            return NextResponse.json(response, { status: 400 });
+          }
+        }
+      }
+      
+      // Validate password
+      if (body.newPassword.length < 6) {
+        const response: ApiResponse = { 
+          success: false, 
+          error: "Password must be at least 6 characters long" 
+        };
+        return NextResponse.json(response, { status: 400 });
+      }
+      
+      // Hash and update password
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(body.newPassword, saltRounds);
+      
+      await User.findByIdAndUpdate(user.id, {
+        password: hashedPassword
+      });
+      
+      console.log(`Password ${hasExistingPassword ? 'changed' : 'set'} for user ${currentUser.email}`);
+      const response: ApiResponse = { 
+        success: true, 
+        message: `Password ${hasExistingPassword ? 'changed' : 'set'} successfully` 
+      };
+      return NextResponse.json(response);
+    }
+
+    const response: ApiResponse = { success: false, error: "Invalid request" };
+    return NextResponse.json(response, { status: 400 });
+
+  } catch (error: any) {
+    console.error('Profile PATCH error:', error);
     const response: ApiResponse = { 
       success: false, 
       error: `Internal server error: ${error.message}` 
