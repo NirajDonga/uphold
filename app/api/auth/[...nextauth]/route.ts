@@ -39,31 +39,39 @@ export const authOptions: NextAuthOptions = {
           await connectToDatabase();
           
           if (!credentials?.email || !credentials?.password) {
+            logger.error("AUTH: Missing email or password credentials");
             return null;
           }
+
+          logger.info(`AUTH: Attempting login for email: ${credentials.email}`);
 
           const user = await User.findOne({ 
             email: credentials.email.toLowerCase()
           });
 
           if (!user) {
+            logger.error(`AUTH: User not found for email: ${credentials.email}`);
             return null;
           }
           
           if (!user.password) {
+            logger.error(`AUTH: User ${credentials.email} has no password set (OAuth-only account). Provider: ${user.provider}`);
             return null;
           }
           
           if (user.provider !== 'credentials') {
+            logger.info(`AUTH: OAuth user (${user.provider}) attempting to log in with password`);
             // Allow OAuth users to log in with password if they have one
           }
 
           const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
           
           if (!isPasswordValid) {
+            logger.error(`AUTH: Invalid password for user: ${credentials.email}`);
             return null;
           }
 
+          logger.info(`AUTH: Login successful for user: ${credentials.email}`);
           return {
             id: (user._id as any).toString(),
             email: user.email,
@@ -72,7 +80,7 @@ export const authOptions: NextAuthOptions = {
             provider: user.provider
           } as NextAuthUser;
         } catch (error) {
-          console.error("Authorize error:", error);
+          logger.error("AUTH: Authorize error:", error);
           return null;
         }
       }
