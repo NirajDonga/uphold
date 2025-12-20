@@ -14,6 +14,7 @@ interface FormData {
   coverPicture: File | null;
   currentPassword?: string;
   newPassword?: string;
+  confirmPassword?: string;
 }
 
 declare global {
@@ -47,6 +48,10 @@ const Dashboard = (): ReactElement => {
   const [loading, setLoading] = useState<boolean>(false);
   const [isCheckingUsername, setIsCheckingUsername] = useState<boolean>(false);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [hasPassword, setHasPassword] = useState<boolean>(true);
+  const [isReAuthenticated, setIsReAuthenticated] = useState<boolean>(false);
+  const [reAuthTimeRemaining, setReAuthTimeRemaining] = useState<number>(0);
+  const [sessionProvider, setSessionProvider] = useState<string>('credentials');
 
   // Username availability check
   const checkUsernameAvailability = useCallback(async (username: string): Promise<void> => {
@@ -74,11 +79,45 @@ const Dashboard = (): ReactElement => {
     }
   }, [userProfile]);
 
+  // Check re-authentication status for OAuth users
+  const checkReAuthStatus = useCallback(async (): Promise<void> => {
+    // If logged in via credentials (password), don't need OAuth re-auth
+    if (sessionProvider === 'credentials') {
+      setIsReAuthenticated(true);
+      return;
+    }
+
+    // OAuth session - check if re-authenticated recently
+    try {
+      const response = await fetch('/api/auth/reauth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'verify' }),
+      });
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        setIsReAuthenticated(data.data.recentlyAuthenticated);
+        setReAuthTimeRemaining(data.data.timeRemaining || 0);
+      }
+    } catch (error) {
+      console.error('Error checking re-auth status:', error);
+      setIsReAuthenticated(false);
+    }
+  }, [sessionProvider]);
+
   // Set form data when userProfile is loaded
   useEffect(() => {
     console.log("userProfile updated:", userProfile);
     
     if (userProfile) {
+      // Check if user has a password
+      setHasPassword(!!userProfile.password);
+      
+      // Track current session provider (how they logged in THIS time)
+      const currentProvider = (session?.user as any)?.provider || userProfile.provider || 'credentials';
+      setSessionProvider(currentProvider);
+      
       // Set basic form data safely
       setFormData(prev => ({
         ...prev,
@@ -109,7 +148,27 @@ const Dashboard = (): ReactElement => {
         console.error("Error setting preview images:", err);
       }
     }
-  }, [userProfile]);
+  }, [userProfile, session]);
+
+  // Check re-authentication status when sessionProvider changes
+  useEffect(() => {
+    checkReAuthStatus();
+  }, [sessionProvider, checkReAuthStatus]);
+
+  // Check if user just returned from re-authentication
+  useEffect(() => {
+    const pendingPasswordSet = sessionStorage.getItem('pendingPasswordSet');
+    if (pendingPasswordSet === 'true' && session) {
+      sessionStorage.removeItem('pendingPasswordSet');
+      // Re-check auth status
+      checkReAuthStatus();
+      toast.success('Re-authentication successful! You can now set your password.', {
+        position: 'top-right',
+        autoClose: 5000,
+        theme: 'dark',
+      });
+    }
+  }, [session, checkReAuthStatus]);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -241,27 +300,104 @@ const Dashboard = (): ReactElement => {
   };
 
   const handleChangePassword = async (): Promise<void> => {
+    // Validate inputs
+    if (!formData.newPassword) {
+      toast.error('Please enter a new password', { position: 'top-right', autoClose: 5000, theme: 'dark' });
+      return;
+    }
+    
+    // If logged in via credentials, require current password
+    if (sessionProvider === 'credentials' && hasPassword && !formData.currentPassword) {
+      toast.error('Please enter your current password', { position: 'top-right', autoClose: 5000, theme: 'dark' });
+      return;
+    }
+    
+    // Validate password confirmation
+    if (formData.confirmPassword && formData.newPassword !== formData.confirmPassword) {
+      toast.error('Passwords do not match', { position: 'top-right', autoClose: 5000, theme: 'dark' });
+      return;
+    }
+    
+    // OAuth session requires recent re-authentication
+    if (sessionProvider !== 'credentials' && !isReAuthenticated) {
+      toast.error('Please re-authenticate before setting/changing your password', { 
+        position: 'top-right', 
+        autoClose: 5000, 
+        theme: 'dark' 
+      });
+      return;
+    }
+    
     setLoading(true);
     try {
+      const requestBody: any = {
+        changePassword: true,
+        newPassword: formData.newPassword,
+      };
+      
+      // Include current password only if logged in via credentials
+      if (sessionProvider === 'credentials' && hasPassword) {
+        requestBody.currentPassword = formData.currentPassword;
+      }
+      
+      // Always include confirmation
+      requestBody.confirmPassword = formData.confirmPassword;
+      
       const res = await fetch('/api/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          changePassword: true,
-          currentPassword: formData.currentPassword,
-          newPassword: formData.newPassword,
-        }),
+        body: JSON.stringify(requestBody),
       });
       const data = await res.json();
+      
       if (res.ok && data.success) {
-        toast.success('Password changed successfully!', { position: 'top-right', autoClose: 5000, theme: 'dark' });
-        setFormData((prev) => ({ ...prev, currentPassword: '', newPassword: '' }));
+        toast.success(data.message || 'Password updated successfully!', { position: 'top-right', autoClose: 5000, theme: 'dark' });
+        setFormData((prev) => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }));
+        // Update hasPassword status since user now has a password
+        setHasPassword(true);
+        setIsReAuthenticated(true);
+      } else if (data.data?.requiresReAuth) {
+        toast.error('Your session has expired. Please re-authenticate.', { 
+          position: 'top-right', 
+          autoClose: 5000, 
+          theme: 'dark' 
+        });
+        setIsReAuthenticated(false);
       } else {
-        toast.error(data.error || 'Failed to change password', { position: 'top-right', autoClose: 5000, theme: 'dark' });
+        toast.error(data.error || 'Failed to update password', { position: 'top-right', autoClose: 5000, theme: 'dark' });
       }
     } catch (err) {
-      toast.error('An error occurred while changing password', { position: 'top-right', autoClose: 5000, theme: 'dark' });
+      toast.error('An error occurred while updating password', { position: 'top-right', autoClose: 5000, theme: 'dark' });
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReAuthenticate = async (): Promise<void> => {
+    setLoading(true);
+    try {
+      // Use current session provider (how they logged in this time)
+      const provider = sessionProvider || 'google';
+      const callbackUrl = encodeURIComponent('/dashboard');
+      
+      // Store intent to set/change password
+      sessionStorage.setItem('pendingPasswordSet', 'true');
+      
+      // Redirect to OAuth provider with prompt for re-auth
+      if (provider === 'google') {
+        window.location.href = `/api/auth/signin/google?callbackUrl=${callbackUrl}&prompt=consent`;
+      } else if (provider === 'github') {
+        window.location.href = `/api/auth/signin/github?callbackUrl=${callbackUrl}`;
+      } else {
+        toast.error('Re-authentication not available for this provider', { 
+          position: 'top-right', 
+          autoClose: 5000, 
+          theme: 'dark' 
+        });
+        setLoading(false);
+      }
+    } catch (err) {
+      toast.error('Failed to initiate re-authentication', { position: 'top-right', autoClose: 5000, theme: 'dark' });
       setLoading(false);
     }
   };
@@ -381,33 +517,88 @@ const Dashboard = (): ReactElement => {
             </p>
           </div>
 
-          {/* Password Change Section - Available for all users */}
-          <div>
-            <label className="block text-gray-400 text-sm font-medium mb-1">Change Password</label>
-            <input
-              type="password"
-              name="currentPassword"
-              placeholder="Current Password"
-              value={formData.currentPassword || ''}
-              onChange={handleInputChange}
-              className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-white transition-colors mb-2"
-            />
-            <input
-              type="password"
-              name="newPassword"
-              placeholder="New Password"
-              value={formData.newPassword || ''}
-              onChange={handleInputChange}
-              className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-white transition-colors mb-2"
-            />
-            <button
-              type="button"
-              onClick={handleChangePassword}
-              className="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
-              disabled={loading}
-            >
-              Change Password
-            </button>
+          {/* Password Change/Set Section - Available for all users */}
+          <div className="border-t border-gray-700 pt-6">
+            <label className="block text-gray-400 text-sm font-medium mb-3">
+              {hasPassword ? 'Change Password' : 'Set Password'}
+            </label>
+            
+            {sessionProvider !== 'credentials' && (
+              <div className="mb-4 p-4 bg-blue-900/20 border border-blue-700 rounded-md">
+                <p className="text-sm text-blue-300 mb-2">
+                  🔐 You're logged in via <strong>{sessionProvider}</strong>. 
+                  {hasPassword 
+                    ? ' To change your password, you need to re-authenticate for security.'
+                    : ' Set a password to enable password-based login.'
+                  }
+                </p>
+                <p className="text-xs text-gray-400 mb-3">
+                  For security, you need to re-authenticate before {hasPassword ? 'changing' : 'setting'} a password.
+                </p>
+                
+                {!isReAuthenticated ? (
+                  <button
+                    type="button"
+                    onClick={handleReAuthenticate}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition duration-300 disabled:opacity-50"
+                    disabled={loading}
+                  >
+                    🔄 Re-authenticate with {sessionProvider}
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2 text-green-400 text-sm">
+                    <span>✓ Authenticated</span>
+                    {reAuthTimeRemaining > 0 && (
+                      <span className="text-gray-400">
+                        ({Math.floor(reAuthTimeRemaining / 60)}:{(reAuthTimeRemaining % 60).toString().padStart(2, '0')} remaining)
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {sessionProvider === 'credentials' && hasPassword && (
+              <input
+                type="password"
+                name="currentPassword"
+                placeholder="Current Password"
+                value={formData.currentPassword || ''}
+                onChange={handleInputChange}
+                className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-white transition-colors mb-2"
+              />
+            )}
+            
+            {(sessionProvider === 'credentials' || isReAuthenticated) && (
+              <>
+                <input
+                  type="password"
+                  name="newPassword"
+                  placeholder="New Password (min 6 characters)"
+                  value={formData.newPassword || ''}
+                  onChange={handleInputChange}
+                  className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-white transition-colors mb-2"
+                />
+                
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="Confirm Password"
+                  value={formData.confirmPassword || ''}
+                  onChange={handleInputChange}
+                  className="w-full bg-transparent border-b-2 border-gray-600 text-white py-2 focus:outline-none focus:border-white transition-colors mb-2"
+                />
+                
+                <button
+                  type="button"
+                  onClick={handleChangePassword}
+                  className="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                  disabled={loading || (sessionProvider !== 'credentials' && !isReAuthenticated)}
+                >
+                  {hasPassword ? 'Change Password' : 'Set Password'}
+                </button>
+              </>
+            )}
           </div>
 
           <div>

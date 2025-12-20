@@ -309,22 +309,94 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Handle password reset and password change requests
     if (body) {
-      const { changePassword, currentPassword, newPassword } = body;
+      const { changePassword, currentPassword, newPassword, confirmPassword } = body;
       
-      // Handle password change
-      if (changePassword && currentPassword && newPassword) {
+      // Handle password change/set
+      if (changePassword && newPassword) {
         const bcrypt = await import('bcryptjs');
+        const { getToken } = await import('next-auth/jwt');
         
-        // Verify current password
-        if (currentUser.password) {
-          const isCurrentPasswordValid = await bcrypt.compare(currentPassword, currentUser.password);
-          if (!isCurrentPasswordValid) {
-            const response: ApiResponse = { success: false, error: "Current password is incorrect" };
-            return NextResponse.json(response, { status: 400 });
+        // Get current session token to check how user logged in
+        const token = await getToken({ 
+          req: request,
+          secret: process.env.NEXTAUTH_SECRET 
+        });
+        
+        if (!token) {
+          const response: ApiResponse = { 
+            success: false, 
+            error: "Authentication token not found" 
+          };
+          return NextResponse.json(response, { status: 401 });
+        }
+        
+        // Check current session provider (how they logged in THIS time)
+        const currentSessionProvider = token.provider || 'credentials';
+        const hasExistingPassword = !!currentUser.password;
+        
+        // If user logged in via OAuth (regardless of whether they have a password)
+        // require re-authentication instead of current password
+        if (currentSessionProvider !== 'credentials') {
+          // OAuth session - require recent re-authentication for security
+          const lastReAuthTime = token.lastReAuthTime || 0;
+          const currentTime = Date.now();
+          const timeSinceReAuth = currentTime - lastReAuthTime;
+          const FIVE_MINUTES = 5 * 60 * 1000;
+          
+          if (timeSinceReAuth > FIVE_MINUTES) {
+            const response: ApiResponse = { 
+              success: false, 
+              error: "Re-authentication required",
+              data: {
+                requiresReAuth: true,
+                reason: hasExistingPassword 
+                  ? "Changing your password requires recent authentication for security"
+                  : "Setting a password requires recent authentication for security"
+              }
+            };
+            return NextResponse.json(response, { status: 403 });
           }
+          
+          console.log(`OAuth user ${currentUser.email} ${hasExistingPassword ? 'changing' : 'setting'} password with valid re-auth (${Math.floor(timeSinceReAuth / 1000)}s ago)`);
         } else {
-          // If user doesn't have a password (OAuth user), any "current password" is invalid
-          const response: ApiResponse = { success: false, error: "Current password is incorrect" };
+          // Credentials session - require current password if user has one
+          if (hasExistingPassword) {
+            if (!currentPassword) {
+              const response: ApiResponse = { 
+                success: false, 
+                error: "Current password is required to change your password" 
+              };
+              return NextResponse.json(response, { status: 400 });
+            }
+            
+            const isCurrentPasswordValid = await bcrypt.compare(currentPassword, currentUser.password);
+            if (!isCurrentPasswordValid) {
+              const response: ApiResponse = { 
+                success: false, 
+                error: "Current password is incorrect" 
+              };
+              return NextResponse.json(response, { status: 400 });
+            }
+          }
+          // If no password exists and logged in with credentials, this shouldn't happen
+          // but we'll allow it (edge case)
+        }
+        
+        // Validate password confirmation (always required for setting/changing)
+        if (confirmPassword && newPassword !== confirmPassword) {
+          const response: ApiResponse = { 
+            success: false, 
+            error: "Passwords do not match" 
+          };
+          return NextResponse.json(response, { status: 400 });
+        }
+        
+        // Validate new password
+        if (newPassword.length < 6) {
+          const response: ApiResponse = { 
+            success: false, 
+            error: "New password must be at least 6 characters long" 
+          };
           return NextResponse.json(response, { status: 400 });
         }
         
@@ -337,10 +409,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           password: hashedNewPassword
         });
         
-        console.log(`Password changed for user ${currentUser.email}`);
+        console.log(`Password ${hasExistingPassword ? 'changed' : 'set'} for user ${currentUser.email}`);
         const response: ApiResponse = { 
           success: true, 
-          message: "Password changed successfully" 
+          message: `Password ${hasExistingPassword ? 'changed' : 'set'} successfully` 
         };
         return NextResponse.json(response);
       }

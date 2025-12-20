@@ -18,6 +18,8 @@ declare module "next-auth/jwt" {
     coverpic?: string;
     provider?: string;
     isProfileComplete?: boolean;
+    lastAuthTime?: number; // Timestamp of last authentication
+    lastReAuthTime?: number; // Timestamp of last re-authentication for sensitive ops
   }
 }
 
@@ -187,6 +189,8 @@ export const authOptions: NextAuthOptions = {
             token.coverpic = dbUser.coverpic?.url || undefined;
             token.provider = dbUser.provider;
             token.isProfileComplete = dbUser.isProfileComplete;
+            token.lastAuthTime = Date.now(); // Track authentication time
+            token.lastReAuthTime = Date.now(); // Fresh auth counts as re-auth
             if (isDebugMode) console.log(`JWT: User ${dbUser.email} authenticated with ID: ${dbUser._id}`);
           } else {
             console.error(`JWT: User ${user.email} not found in database during sign in`);
@@ -231,6 +235,8 @@ export const authOptions: NextAuthOptions = {
       (session.user as any).coverpic = token.coverpic;
       (session.user as any).provider = token.provider || 'credentials';
       (session.user as any).isProfileComplete = token.isProfileComplete ?? false;
+      (session.user as any).lastAuthTime = token.lastAuthTime;
+      (session.user as any).lastReAuthTime = token.lastReAuthTime;
       
       if (isDebugMode) {
         console.log(`Session: User ${session.user.email} (${token.provider}) authenticated`);
