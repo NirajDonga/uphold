@@ -9,7 +9,6 @@ import type { NextAuthOptions, SessionStrategy } from "next-auth";
 import type { User as NextAuthUser } from "next-auth";
 import { logger } from "@/app/lib/logger";
 
-// Use module augmentation to extend the JWT type
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
@@ -18,12 +17,11 @@ declare module "next-auth/jwt" {
     coverpic?: string;
     provider?: string;
     isProfileComplete?: boolean;
-    lastAuthTime?: number; // Timestamp of last authentication
-    lastReAuthTime?: number; // Timestamp of last re-authentication for sensitive ops
+    lastAuthTime?: number;
+    lastReAuthTime?: number;
   }
 }
 
-// Ensure required environment variables are present
 if (!process.env.NEXTAUTH_SECRET) {
   throw new Error('NEXTAUTH_SECRET environment variable is not set. This is required for authentication.');
 }
@@ -32,7 +30,6 @@ if (!process.env.NEXTAUTH_URL && process.env.NODE_ENV === 'production') {
   console.warn('NEXTAUTH_URL is not set. It is recommended for production deployments.');
 }
 
-// Determine if we should enable debug mode
 const isDebugMode = process.env.NODE_ENV === 'development' || process.env.NEXTAUTH_DEBUG === 'true';
 
 export const authOptions: NextAuthOptions = {
@@ -70,7 +67,6 @@ export const authOptions: NextAuthOptions = {
           
           if (user.provider !== 'credentials') {
             logger.info(`AUTH: OAuth user (${user.provider}) attempting to log in with password`);
-            // Allow OAuth users to log in with password if they have one
           }
 
           const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
@@ -94,21 +90,19 @@ export const authOptions: NextAuthOptions = {
         }
       }
     }),
-    // Only add GitHub provider if credentials are available
     ...(process.env.GITHUB_ID && process.env.GITHUB_SECRET ? [
       GithubProvider({
         clientId: process.env.GITHUB_ID,
         clientSecret: process.env.GITHUB_SECRET,
       })
     ] : []),
-    // Only add Google provider if credentials are available
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? [
       GoogleProvider({
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         authorization: {
           params: {
-            prompt: "select_account", // <-- This line forces the account picker
+            prompt: "select_account",
           },
         },
       })
@@ -120,7 +114,6 @@ export const authOptions: NextAuthOptions = {
         await connectToDatabase();
 
         if (account?.provider === 'credentials') {
-          // Credentials login - just verify user exists
           const dbUser = await User.findOne({ email: user.email }).lean();
           if (!dbUser) {
             console.error(`SignIn: User ${user.email} not found`);
@@ -132,11 +125,9 @@ export const authOptions: NextAuthOptions = {
           return true;
         }
 
-        // OAuth login - create or update user
         const currentUser = await User.findOne({ email: user.email });
 
         if (!currentUser) {
-          // Create new user with unique username
           let baseUsername = user.email!.split("@")[0].replace(/[^a-zA-Z0-9]/g, '');
           let username = baseUsername;
           let counter = 1;
@@ -157,7 +148,6 @@ export const authOptions: NextAuthOptions = {
           if (isDebugMode) console.log(`SignIn: New user created: ${username}`);
           return true;
         } else {
-          // Update provider if it changed
           if (currentUser.provider !== account!.provider) {
             currentUser.provider = account!.provider as any;
             if (!currentUser.password) {
@@ -179,7 +169,6 @@ export const authOptions: NextAuthOptions = {
         await connectToDatabase();
         
         if (user) {
-          // Initial sign in - fetch user data
           const dbUser = await User.findOne({ email: user.email }).lean();
           if (dbUser) {
             token.id = (dbUser._id as any).toString();
@@ -189,8 +178,8 @@ export const authOptions: NextAuthOptions = {
             token.coverpic = dbUser.coverpic?.url || undefined;
             token.provider = dbUser.provider;
             token.isProfileComplete = dbUser.isProfileComplete;
-            token.lastAuthTime = Date.now(); // Track authentication time
-            token.lastReAuthTime = Date.now(); // Fresh auth counts as re-auth
+            token.lastAuthTime = Date.now();
+            token.lastReAuthTime = Date.now();
             if (isDebugMode) console.log(`JWT: User ${dbUser.email} authenticated with ID: ${dbUser._id}`);
           } else {
             console.error(`JWT: User ${user.email} not found in database during sign in`);
@@ -198,7 +187,6 @@ export const authOptions: NextAuthOptions = {
           return token;
         }
 
-        // Handle profile updates - always fetch fresh data from DB
         if (trigger === "update" && token?.id) {
           if (isDebugMode) console.log('JWT: Update triggered, refreshing user data');
           const dbUser = await User.findById(token.id).lean();
@@ -208,7 +196,6 @@ export const authOptions: NextAuthOptions = {
             token.profilepic = dbUser.profilepic?.url || undefined;
             token.coverpic = dbUser.coverpic?.url || undefined;
             token.isProfileComplete = dbUser.isProfileComplete;
-            // Update lastReAuthTime when explicitly updating (after re-auth)
             token.lastReAuthTime = Date.now();
             if (isDebugMode) console.log(`JWT: Token updated for user ${dbUser.email}`);
           } else {
@@ -219,7 +206,7 @@ export const authOptions: NextAuthOptions = {
         return token;
       } catch (error) {
         console.error('JWT callback error:', error);
-        return token; // Return token even on error to prevent auth failure
+        return token;
       }
     },
 
@@ -229,7 +216,6 @@ export const authOptions: NextAuthOptions = {
         return session;
       }
       
-      // Map token data to session
       session.user.id = token.id as string;
       session.user.name = token.name as string;
       (session.user as any).username = token.username;
@@ -250,28 +236,24 @@ export const authOptions: NextAuthOptions = {
     async redirect({ url, baseUrl }) {
       console.log(`Redirect: url=${url}, baseUrl=${baseUrl}`);
       
-      // If relative URL, make it absolute
       if (url.startsWith('/')) {
         return `${baseUrl}${url}`;
       }
       
-      // If same domain, allow
       if (url.startsWith(baseUrl)) {
         return url;
       }
       
-      // Otherwise return base URL
       return baseUrl;
     }
   },
   session: {
     strategy: "jwt" as SessionStrategy,
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
   jwt: {
-    // JWT encryption and cookie settings
     secret: process.env.NEXTAUTH_SECRET,
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
   cookies: {
     sessionToken: {
@@ -281,7 +263,7 @@ export const authOptions: NextAuthOptions = {
         sameSite: 'lax',
         path: '/',
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 30 * 24 * 60 * 60, // 30 days
+        maxAge: 30 * 24 * 60 * 60,
       }
     },
     callbackUrl: {
@@ -305,9 +287,8 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/login',
     signOut: '/login',
-    error: '/login', // Error page
+    error: '/login',
   },
-  // Using events to customize redirect behavior after sign in
   events: {
     async signIn({ user }) {
       if (isDebugMode) console.log(`Event: User ${user.email} signed in successfully`);
@@ -317,7 +298,6 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 };
 
-// Create handler with NextAuth and export it
 const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
