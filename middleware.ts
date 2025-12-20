@@ -7,38 +7,27 @@ export default withAuth(
     const { pathname } = req.nextUrl;
     const { token } = req.nextauth;
 
+    console.log(`[MW] ${pathname} | Auth: ${!!token} | Complete: ${token?.isProfileComplete}`);
+
+    // Handle complete-profile page
     if (pathname === '/complete-profile') {
-      if (token && token.isProfileComplete) {
-        if (token.username) {
-          return NextResponse.redirect(new URL(`/${token.username}`, req.url));
-        } else {
-          return NextResponse.redirect(new URL('/dashboard', req.url));
-        }
+      if (token?.isProfileComplete) {
+        return NextResponse.redirect(new URL('/dashboard', req.url));
       }
       return NextResponse.next();
     }
     
+    // Handle authenticated users on login page
     if (token && pathname === '/login') {
       if (!token.isProfileComplete) {
         return NextResponse.redirect(new URL('/complete-profile', req.url));
       }
-      
-      // Try to get the last visited page from the request cookies
-      const lastPageCookie = req.cookies.get('lastVisitedPage');
-      const lastPage = lastPageCookie ? lastPageCookie.value : '/dashboard';
-      
-      // Redirect to last visited page if available, otherwise dashboard
-      return NextResponse.redirect(new URL(lastPage, req.url));
+      return NextResponse.redirect(new URL('/dashboard', req.url));
     }
 
-    if (!token && (pathname.startsWith('/dashboard') || pathname.startsWith('/funds'))) {
-      return NextResponse.redirect(new URL('/login', req.url));
-    }
-
+    // Only redirect incomplete profiles for protected routes
     if (token && !token.isProfileComplete && 
-        (pathname.startsWith('/dashboard') || 
-         pathname.startsWith('/funds') || 
-         (token.username && pathname === `/${token.username}`))) {
+        (pathname.startsWith('/dashboard') || pathname.startsWith('/funds'))) {
       return NextResponse.redirect(new URL('/complete-profile', req.url));
     }
 
@@ -46,23 +35,8 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token, req }) => {
-        const path = req.nextUrl.pathname;
-
-        // Explicitly allow the landing page
-        if (path === '/') {
-          return true;
-        }
-
-        // Require authentication for protected routes
-        if (path.startsWith('/dashboard') || 
-            path.startsWith('/funds') ||
-            // Dynamic username path, but not public paths
-            (path.startsWith('/') && path.split('/').length === 2 && !path.startsWith('/api') && 
-             !path.startsWith('/login') && !path.startsWith('/register') && 
-             !path.startsWith('/complete-profile'))) {
-          return !!token;
-        }
+      authorized: ({ token }) => {
+        // Always return true - let client-side handle auth
         return true;
       },
     },
@@ -71,10 +45,7 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    '/dashboard/:path*', 
-    '/funds/:path*', 
     '/login',
-    '/:username', 
-    '/((?!api|_next/static|_next/image|favicon.ico|complete-profile).)*'
+    '/complete-profile'
   ]
 };

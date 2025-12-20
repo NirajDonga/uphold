@@ -22,9 +22,16 @@ declare module "next-auth/jwt" {
 }
 
 // Ensure required environment variables are present
-if (!process.env.NEXTAUTH_SECRET && process.env.NODE_ENV === 'production') {
-  console.warn('NEXTAUTH_SECRET environment variable is not set. This is required for production.');
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error('NEXTAUTH_SECRET environment variable is not set. This is required for authentication.');
 }
+
+if (!process.env.NEXTAUTH_URL && process.env.NODE_ENV === 'production') {
+  console.warn('NEXTAUTH_URL is not set. It is recommended for production deployments.');
+}
+
+// Determine if we should enable debug mode
+const isDebugMode = process.env.NODE_ENV === 'development' || process.env.NEXTAUTH_DEBUG === 'true';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -111,21 +118,28 @@ export const authOptions: NextAuthOptions = {
         await connectToDatabase();
 
         if (account?.provider === 'credentials') {
-          const dbUser = await User.findOne({ email: user.email });
-          if (dbUser && dbUser.provider !== 'credentials') {
-            logger.info(`AUTH: OAuth user (${dbUser.provider}) logged in with password`);
+          // Credentials login - just verify user exists
+          const dbUser = await User.findOne({ email: user.email }).lean();
+          if (!dbUser) {
+            console.error(`SignIn: User ${user.email} not found`);
+            return false;
+          }
+          if (isDebugMode && dbUser.provider !== 'credentials') {
+            console.log(`SignIn: OAuth user (${dbUser.provider}) logged in with password`);
           }
           return true;
         }
 
+        // OAuth login - create or update user
         const currentUser = await User.findOne({ email: user.email });
 
         if (!currentUser) {
-          let baseUsername = user.email!.split("@")[0];
+          // Create new user with unique username
+          let baseUsername = user.email!.split("@")[0].replace(/[^a-zA-Z0-9]/g, '');
           let username = baseUsername;
           let counter = 1;
           
-          while (await User.findOne({ username: username.toLowerCase() })) {
+          while (await User.exists({ username: username.toLowerCase() })) {
             username = `${baseUsername}${counter}`;
             counter++;
           }
@@ -138,35 +152,33 @@ export const authOptions: NextAuthOptions = {
             isProfileComplete: false
           });
           await newUser.save();
+          if (isDebugMode) console.log(`SignIn: New user created: ${username}`);
           return true;
         } else {
           // Update provider if it changed
           if (currentUser.provider !== account!.provider) {
-            // Store the new provider
             currentUser.provider = account!.provider as any;
-            
-            // Only reset profile completion if the user doesn't have a password set
             if (!currentUser.password) {
               currentUser.isProfileComplete = false;
             }
-            
             await currentUser.save();
+            if (isDebugMode) console.log(`SignIn: Updated provider for user: ${currentUser.email}`);
           }
-          
           return true;
         }
       } catch (error) {
-        return false; // Prevent sign in if database operation fails
+        console.error('SignIn callback error:', error);
+        return false;
       }
     },
 
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, trigger }) {
       try {
         await connectToDatabase();
         
         if (user) {
-          // Initial sign in
-          const dbUser = await User.findOne({ email: user.email });
+          // Initial sign in - fetch user data
+          const dbUser = await User.findOne({ email: user.email }).lean();
           if (dbUser) {
             token.id = (dbUser._id as any).toString();
             token.username = dbUser.username;
@@ -175,49 +187,26 @@ export const authOptions: NextAuthOptions = {
             token.coverpic = dbUser.coverpic?.url || undefined;
             token.provider = dbUser.provider;
             token.isProfileComplete = dbUser.isProfileComplete;
-            console.log(`JWT: User ${dbUser.email} authenticated with ID: ${dbUser._id}`);
+            if (isDebugMode) console.log(`JWT: User ${dbUser.email} authenticated with ID: ${dbUser._id}`);
           } else {
             console.error(`JWT: User ${user.email} not found in database during sign in`);
-            // Don't return null, just continue with basic token
           }
+          return token;
         }
 
         // Handle profile updates - always fetch fresh data from DB
-        if (trigger === "update" && session) {
-          console.log('JWT update triggered with session data:', session);
-          const dbUser = await User.findById(token.id);
+        if (trigger === "update" && token?.id) {
+          if (isDebugMode) console.log('JWT: Update triggered, refreshing user data');
+          const dbUser = await User.findById(token.id).lean();
           if (dbUser) {
-            // Update token with fresh data from database
             token.username = dbUser.username;
             token.name = dbUser.name;
             token.profilepic = dbUser.profilepic?.url || undefined;
             token.coverpic = dbUser.coverpic?.url || undefined;
             token.isProfileComplete = dbUser.isProfileComplete;
-            logger.debug(`JWT: Updated token for user ${dbUser.email}`);
-            try {
-              logger.profile(dbUser);
-            } catch (profileError) {
-              console.error('Error logging profile:', profileError);
-            }
+            if (isDebugMode) console.log(`JWT: Token updated for user ${dbUser.email}`);
           } else {
-            logger.error(`JWT: User ${token.id} not found during update`);
-          }
-        }
-
-        // Always validate user exists in database
-        if (token?.id) {
-          const dbUser = await User.findById(token.id);
-          if (dbUser) {
-            // Update token with latest data if needed
-            if (dbUser.username !== token.username) {
-              token.username = dbUser.username;
-              token.name = dbUser.name;
-              token.profilepic = dbUser.profilepic?.url || undefined;
-              token.coverpic = dbUser.coverpic?.url || undefined;
-              token.isProfileComplete = dbUser.isProfileComplete;
-            }
-          } else {
-            console.error(`JWT: User ${token.id} not found in database, continuing with existing token`);
+            console.error(`JWT: User ${token.id} not found during update`);
           }
         }
 
@@ -229,63 +218,42 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }) {
-      // If token is null, user is not authenticated
       if (!token) {
-        console.log('Session: Token is null, user not authenticated');
+        if (isDebugMode) console.log('Session: No token, user not authenticated');
         return session;
       }
       
-      if (token?.id) session.user.id = token.id as string;
-      if (token?.username) (session.user as any).username = token.username;
-      if (token?.name) session.user.name = token.name as string;
+      // Map token data to session
+      session.user.id = token.id as string;
+      session.user.name = token.name as string;
+      (session.user as any).username = token.username;
+      (session.user as any).profilePic = token.profilepic;
+      (session.user as any).coverpic = token.coverpic;
+      (session.user as any).provider = token.provider || 'credentials';
+      (session.user as any).isProfileComplete = token.isProfileComplete ?? false;
       
-      // Always set these properties to prevent "cannot read property of undefined" errors
-      (session.user as any).profilePic = token?.profilepic || undefined;
-      (session.user as any).coverpic = token?.coverpic || undefined;
-      (session.user as any).provider = token?.provider || 'credentials';
-      (session.user as any).isProfileComplete = token?.isProfileComplete !== undefined ? token.isProfileComplete : false;
-      
-      console.log(`Session: User ${session.user.email} authenticated with provider: ${(session.user as any).provider}`);
-      
-      // Log if a Google/OAuth user is using email/password login
-      if (token.provider !== 'credentials' && token.sub) {
-        console.log(`OAuth user (${token.provider}) logged in with password credentials`);
+      if (isDebugMode) {
+        console.log(`Session: User ${session.user.email} (${token.provider}) authenticated`);
       }
       
-      console.log(`Session: User ${session.user.email} authenticated with ID: ${session.user.id}`);
       return session;
     },
 
-    // Handle the redirect callback properly
     async redirect({ url, baseUrl }) {
-      // Log the redirect event
-      console.log(`Redirect callback: URL=${url}, BaseURL=${baseUrl}`);
+      console.log(`Redirect: url=${url}, baseUrl=${baseUrl}`);
       
-      // Special case for GitHub callback to complete-profile
-      if (url.includes('/api/auth/callback') || url === baseUrl) {
-        // For OAuth callbacks or root URL, we want to respect the signIn callback's return value
-        // This ensures GitHub auth redirects to complete-profile for new users
-        console.log(`OAuth callback detected, redirecting to appropriate page`);
-        // We'll check the database in the signIn callback and redirect accordingly
-        return baseUrl;
-      }
-      
-      // If the URL is relative (starts with a slash), prepend the base URL
+      // If relative URL, make it absolute
       if (url.startsWith('/')) {
-        const newUrl = `${baseUrl}${url}`;
-        console.log(`Converted relative URL to absolute: ${newUrl}`);
-        return newUrl;
+        return `${baseUrl}${url}`;
       }
       
-      // If the URL is already absolute but doesn't start with the base URL,
-      // ensure it's safe by checking it starts with the base URL
-      if (!url.startsWith(baseUrl)) {
-        console.log(`URL ${url} doesn't start with base URL ${baseUrl}, using default`);
-        return baseUrl;
+      // If same domain, allow
+      if (url.startsWith(baseUrl)) {
+        return url;
       }
       
-      // Otherwise, return the URL as is
-      return url;
+      // Otherwise return base URL
+      return baseUrl;
     }
   },
   session: {
@@ -334,14 +302,10 @@ export const authOptions: NextAuthOptions = {
   // Using events to customize redirect behavior after sign in
   events: {
     async signIn({ user }) {
-      // Log the sign-in event
-      console.log(`Event: User ${user.email} signed in successfully`);
-    },
-    async session({ session }) {
-      console.log(`Session event triggered for user: ${session?.user?.email || 'unknown'}`);
+      if (isDebugMode) console.log(`Event: User ${user.email} signed in successfully`);
     },
   },
-  debug: true, // Enable debug logging to trace auth issues
+  debug: isDebugMode,
   secret: process.env.NEXTAUTH_SECRET,
 };
 
